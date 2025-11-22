@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  eureka-server:
+    build: .
+    ports:
+      - "8761:8761"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - microservices
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: eloquent_hamilton
+    ports:
+      - "9411:9411"
+    networks:
+      - microservices
+
+networks:
+  microservices:
