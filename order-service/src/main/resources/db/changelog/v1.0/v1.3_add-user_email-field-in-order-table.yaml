@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: kazitskiy
+
+      changes:
+        - delete:
+            tableName: orders
+        - addColumn:
+            tableName: orders
+            columns:
+              - column:
+                  name: user_email
+                  type: varchar(100)
+                  constraints:
+                    nullable: false

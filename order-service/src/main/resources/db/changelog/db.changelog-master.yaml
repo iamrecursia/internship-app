@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/v1.0/v1.1_create-orders-schema.yaml
+  - include:
+      file: db/changelog/v1.0/v1.2_change-creation-date-to-timestamp.yaml
+  - include:
+      file: db/changelog/v1.0/v1.3_add-user_email-field-in-order-table.yaml

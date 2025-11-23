@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: kazitskiy
+
+      changes:
+        - modifyDataType:
+            tableName: orders
+            columnName: creation_date
+            newDataType: TIMESTAMP
