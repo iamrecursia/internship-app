@@ -1,4 +1,7 @@
 spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   application:
     name: order-service
   datasource:
@@ -14,6 +17,13 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          user-service:
+            connect-timeout: 5000
+            read-timeout: 10000
 #Bind
 feign:
   circuitbreaker:
@@ -34,6 +44,5 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
-
 
 

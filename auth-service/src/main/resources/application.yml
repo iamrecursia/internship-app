@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    enabled: true
+    default-schema: public
+
+  jpa:
+    hibernate:
+      ddl-auto: validate #only check
+    show-sql: true
+  application:
+    name: auth-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+
+JWT_SECRET_KEY: "your-very-strong-secret-key-here-at-least-32-characters!"
+JWT_ACCESS_EXPIRE: 3600000
+JWT_REFRESH_EXPIRE: 604800000
+#zipkin:
+#  base-url: ${SPRING_ZIPKIN_BASE_URL}
+#
+#management:
+#  tracing:
+#    sampling:
+#      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY}
+server:
+  port: 8084
