@@ -146,6 +146,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     private OrderResponse enrichOrderWithUser(Order order){
+        System.out.println("enrichOrderWith called for email: " + order.getUserEmail());
         OrderResponse response = orderMapper.toDto(order);
         try {
             UserDto user = userClient.getUserByEmail(order.getUserEmail());
