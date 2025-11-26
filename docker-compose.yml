@@ -1,37 +1,57 @@
-version: '3.8'
-
 services:
   postgres-order-service:
     image: postgres:15
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER_FOR_ORDER_SERVICE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_ORDER_SERVICE}
+      POSTGRES_DB: ${POSTGRES_DB_FOR_ORDER_SERVICE}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT_FOR_ORDER}:5432"
     volumes:
       - pgdata_order:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_FOR_ORDER_SERVICE} -d ${POSTGRES_DB_FOR_ORDER_SERVICE}"]
       interval: 5s
       timeout: 5s
       retries: 10
     restart: unless-stopped
 
-  order-service:
-    build: .
-    ports:
-      - "${ORDER_SERVICE_PORT}:8083"
+  postgres-user-service:
+    image: postgres:15
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_LIQUIBASE_ENABLED: "true"
-    depends_on:
-      postgres-order-service:
-        condition: service_healthy
+      POSTGRES_USER: ${POSTGRES_USER_FOR_USER_SERVICE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_USER_SERVICE}
+      POSTGRES_DB: ${POSTGRES_DB_FOR_USER_SERVICE}
+    ports:
+      - "${POSTGRES_PORT_FOR_USER}:5432"
+    volumes:
+      - pgdata_user:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_FOR_USER_SERVICE} -d ${POSTGRES_DB_FOR_USER_SERVICE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
+
+  postgres-auth-service:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_FOR_AUTH_SERVICE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_AUTH_SERVICE}
+      POSTGRES_DB: ${POSTGRES_DB_FOR_AUTH_SERVICE}
+    ports:
+      - "${POSTGRES_PORT_FOR_AUTH}:5432"
+    volumes:
+      - pgdata_auth:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER_FOR_AUTH_SERVICE} -d ${POSTGRES_DB_FOR_AUTH_SERVICE}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
 
 volumes:
   pgdata_order:
+  pgdata_user:
+  pgdata_auth:
