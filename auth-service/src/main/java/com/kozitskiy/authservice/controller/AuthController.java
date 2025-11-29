@@ -1,16 +1,26 @@
 package com.kozitskiy.authservice.controller;
 
+import com.kozitskiy.authservice.client.UserClient;
+import com.kozitskiy.authservice.dto.CreateUserRequest;
 import com.kozitskiy.authservice.dto.LoginRequest;
 import com.kozitskiy.authservice.dto.RegisterRequest;
 import com.kozitskiy.authservice.entity.User;
 import com.kozitskiy.authservice.entity.UserRole;
+import com.kozitskiy.authservice.exception.EmailAlreadyExistsException;
+import com.kozitskiy.authservice.exception.RegistrationFailedException;
+import com.kozitskiy.authservice.exception.UserServiceUnavailableException;
 import com.kozitskiy.authservice.repository.UserRepository;
 import com.kozitskiy.authservice.util.JwtUtil;
+import feign.FeignException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Map;
 
@@ -22,22 +32,49 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserClient userClient;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest registerRequest) {
-        String email = registerRequest.getEmail();
-        String password = registerRequest.getPassword();
+    public String register(@Valid @RequestBody RegisterRequest request) {
 
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("User already exists");
+        if (userRepository.existsByEmail(request.getEmail())){
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setRole(UserRole.USER);
-        userRepository.save(user);
-        return "User registered";
+        Long userId = null;
+
+        try {
+            User authUser = new User();
+            authUser.setEmail(request.getEmail());
+            authUser.setPassword(passwordEncoder.encode(request.getPassword()));
+            authUser.setRole(UserRole.USER);
+
+            User savedUser = userRepository.save(authUser);
+            userId = savedUser.getId();
+
+            CreateUserRequest userRequest = CreateUserRequest.builder()
+                    .name(request.getName())
+                    .surname(request.getSurname())
+                    .birthDate(request.getBirthDate())
+                    .email(request.getEmail())
+                    .build();
+
+            userClient.createUser(userRequest);
+            return "User registered successfully";
+
+        }catch (UserServiceUnavailableException | FeignException | ResourceAccessException e){
+            if (userId != null){
+                try {
+                    userRepository.deleteById(userId);
+                } catch (Exception deleteEx) {
+                    logger.error("Failed to rollback user registration for email: {}", request.getEmail(), deleteEx);
+                }
+            }
+            throw new RegistrationFailedException("Registration failed: ", e);
+        }
+
     }
 
     @PostMapping("/login")

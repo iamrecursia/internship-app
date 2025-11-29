@@ -53,11 +53,4 @@ public class JwtUtil {
 
     public String getEmailFromToken(String token){
         return JWT.decode(token).getSubject();
-    }
-
-
-}
-//access
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrb3ppdHNraXkuMjAwNUBtYWlsLnJ1IiwiZXhwIjoxNzYyNjI4MDQyfQ.uKtyTAVNrSK6gy0czw0ichXQMfkZt-piIr3Rcwik3fw
-
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrb3ppdHNraXkuMjAwNUBtYWlsLnJ1IiwiZXhwIjoxNzYzMjMxOTQyfQ.hxCr8R3P-YH_Xbp4S1CDk2jAT_D0KV0vsJ-cWg9l_ts
+    }}
