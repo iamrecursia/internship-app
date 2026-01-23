@@ -1,7 +1,7 @@
-package com.kozitskiy.paymentservice.entity.repository;
+package com.kozitskiy.paymentservice.repository;
 
 import com.kozitskiy.paymentservice.entity.Payment;
-import com.kozitskiy.paymentservice.entity.dto.PaymentResponse;
+import com.kozitskiy.paymentservice.dto.PaymentResponse;
 import com.kozitskiy.paymentservice.entity.enums.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
