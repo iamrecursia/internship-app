@@ -1,4 +1,4 @@
-package com.kozitskiy.paymentservice.entity.dto;
+package com.kozitskiy.paymentservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,4 +1,4 @@
-package com.kozitskiy.paymentservice.entity.dto;
+package com.kozitskiy.paymentservice.dto;
 
 import com.kozitskiy.paymentservice.entity.enums.PaymentStatus;
 
