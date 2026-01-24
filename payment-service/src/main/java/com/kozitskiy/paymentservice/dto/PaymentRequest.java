@@ -10,11 +10,14 @@ import java.math.BigDecimal;
 public record PaymentRequest(
 
         @NotNull(message = "User ID is required")
+        @Positive(message = "User ID must be positive")
         Long userId,
 
         @NotNull(message = "order ID is required")
+        @Positive(message = "order ID must be positive")
         Long orderId,
 
+        @NotNull(message = "Amount is required")
         @Positive(message = "Amount must be greater than zero")
         BigDecimal amount,
 

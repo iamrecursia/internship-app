@@ -1,5 +1,6 @@
 package com.kozitskiy.paymentservice.service;
 
+import com.kozitskiy.paymentservice.client.RandomNumberClient;
 import com.kozitskiy.paymentservice.dto.PaymentRequest;
 import com.kozitskiy.paymentservice.dto.PaymentResponse;
 import com.kozitskiy.paymentservice.entity.Payment;
@@ -26,12 +27,32 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final RandomNumberClient randomNumberClient;
 
     @Override
     public PaymentResponse createPayment(PaymentRequest request) {
         log.info("Creating payment for order: {}", request.orderId());
 
         Payment payment = paymentMapper.toEntity(request);
+
+        // API logic
+        try {
+            String response = randomNumberClient.getRandomNumber();
+
+            String cleanNumber = response.trim();
+            log.info("External API returned: '{}'", cleanNumber);
+
+            int number = Integer.parseInt(cleanNumber);
+
+            if (number % 2 == 0){
+                payment.setStatus(PaymentStatus.SUCCESS);
+            }else {
+                payment.setStatus(PaymentStatus.FAILED);
+            }
+        }catch (Exception e){
+            log.error("Error calling external Random API");
+            payment.setStatus(PaymentStatus.FAILED);
+        }
 
         Payment saved = paymentRepository.save(payment);
         log.debug("Payment saved with ID: {}", saved.getId());
