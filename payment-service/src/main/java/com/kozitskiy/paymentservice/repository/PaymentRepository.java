@@ -13,16 +13,16 @@ import java.time.Instant;
 import java.util.List;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<Long, Payment> {
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
-    List<PaymentResponse> findAllByOrderId(Long orderId);
+    List<Payment> findAllByOrderId(Long orderId);
 
-    List<PaymentResponse> findAllByUserId(Long userId);
+    List<Payment> findAllByUserId(Long userId);
 
-    List<PaymentResponse> findAllByStatusIn(List<PaymentStatus> statuses);
+    List<Payment> findAllByStatusIn(List<PaymentStatus> statuses);
 
 
-    @Query("SELECT COALESCE(SUM(p.amount, 0)) FROM Payment p " +
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p " +
             "WHERE p.createdAt BETWEEN :start AND :end " +
             "AND p.currency = :currency")
     BigDecimal getTotalSumByPeriod(@Param("start") Instant start,
