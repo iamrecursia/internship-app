@@ -14,7 +14,7 @@ public interface PaymentMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", constant = "PENDING")
-    @Mapping(target = "createAt", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     Payment toEntity(PaymentRequest dto);
 
     PaymentResponse toDTO(Payment payment);
