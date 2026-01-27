@@ -1,5 +1,6 @@
 package com.kozitskiy.orderservice.kafka.producer;
 
+import com.kozitskiy.dto.KafkaTopics;
 import com.kozitskiy.dto.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ public class OrderEventProducer {
     public void sendOrderCreated(OrderCreatedEvent event){
         log.info("Sending OrderCreatedEvent to Kafka: {}", event);
 
-        kafkaTemplate.send("order-created-topic", String.valueOf(event.orderId()), event);
+        kafkaTemplate.send(KafkaTopics.ORDER_CREATED, String.valueOf(event.orderId()), event);
 
     }
 }

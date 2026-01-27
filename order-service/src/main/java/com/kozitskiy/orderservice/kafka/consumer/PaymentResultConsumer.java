@@ -1,5 +1,6 @@
 package com.kozitskiy.orderservice.kafka.consumer;
 
+import com.kozitskiy.dto.KafkaTopics;
 import com.kozitskiy.dto.PaymentProcessedEvent;
 import com.kozitskiy.orderservice.entity.OrderStatus;
 import com.kozitskiy.orderservice.repository.OrderRepository;
@@ -15,7 +16,7 @@ public class PaymentResultConsumer {
 
     private final OrderRepository orderRepository;
 
-    @KafkaListener(topics = "payment-result-topic", groupId = "order-service-group")
+    @KafkaListener(topics = KafkaTopics.PAYMENT_RESULT, groupId = "order-service-group")
     public void handlePaymentResult(PaymentProcessedEvent event){
         log.info("Received payment result for order {}: {}", event.orderId(), event.status());
 

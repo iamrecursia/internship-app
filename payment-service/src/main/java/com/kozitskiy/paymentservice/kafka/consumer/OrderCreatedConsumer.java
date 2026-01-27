@@ -1,5 +1,6 @@
 package com.kozitskiy.paymentservice.kafka.consumer;
 
+import com.kozitskiy.dto.KafkaTopics;
 import com.kozitskiy.dto.OrderCreatedEvent;
 import com.kozitskiy.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ public class OrderCreatedConsumer {
 
     private final PaymentService paymentService;
 
-    @KafkaListener(topics = "order-created-topic", groupId = "payment-service-group")
+    @KafkaListener(topics = KafkaTopics.ORDER_CREATED, groupId = "payment-service-group")
     public void handleOrderCreated(OrderCreatedEvent event){
         log.info("Received order created event from Kafka: {}", event);
         try {
