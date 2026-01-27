@@ -1,26 +1,48 @@
 package com.kozitskiy.orderservice.exception;
 
+import com.kozitskiy.orderservice.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice
+import java.time.LocalDateTime;
+
+@RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<String> handleOrderNotFound(OrderNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    @ExceptionHandler({
+            ItemNotFoundException.class,
+            OrderNotFoundException.class})
+    public ResponseEntity<ErrorResponse> handleNotFoundException(RuntimeException ex){
+        log.error("Resource not found: {}", ex.getMessage());
+
+        return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(ItemNotFoundException.class)
-    public ResponseEntity<String> handleItemNotFound(ItemNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
+        log.error("Unexpected error: ", ex);
+        return buildResponse("An internal server error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 
     @ExceptionHandler(InvalidOrderStatusException.class)
-    public ResponseEntity<String> handleInvalidOrderStatus(InvalidOrderStatusException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleBadRequest(InvalidOrderStatusException ex) {
+        log.error("Invalid request {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponse(String message, HttpStatus status){
+        ErrorResponse error = new ErrorResponse(
+                message,
+                status.value(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(status).body(error);
     }
 
 }
