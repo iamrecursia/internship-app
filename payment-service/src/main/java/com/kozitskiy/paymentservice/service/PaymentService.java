@@ -1,6 +1,7 @@
 package com.kozitskiy.paymentservice.service;
 
 
+import com.kozitskiy.dto.OrderCreatedEvent;
 import com.kozitskiy.paymentservice.dto.PaymentRequest;
 import com.kozitskiy.paymentservice.dto.PaymentResponse;
 import com.kozitskiy.paymentservice.entity.enums.PaymentStatus;
@@ -20,5 +21,7 @@ public interface PaymentService {
     List<PaymentResponse> findAllByStatuses(List<PaymentStatus> statuses);
 
     BigDecimal getTotalSum(Instant start, Instant end, String currency);
+
+    void processOrderPayment(OrderCreatedEvent orderCreatedEvent);
 
 }

@@ -1,5 +1,6 @@
 package com.kozitskiy.orderservice.service;
 
+import com.kozitskiy.dto.OrderCreatedEvent;
 import com.kozitskiy.orderservice.client.UserClient;
 import com.kozitskiy.orderservice.dto.*;
 import com.kozitskiy.orderservice.entity.Item;
@@ -9,19 +10,23 @@ import com.kozitskiy.orderservice.entity.OrderStatus;
 import com.kozitskiy.orderservice.exception.InvalidOrderStatusException;
 import com.kozitskiy.orderservice.exception.ItemNotFoundException;
 import com.kozitskiy.orderservice.exception.OrderNotFoundException;
+import com.kozitskiy.orderservice.kafka.producer.OrderEventProducer;
 import com.kozitskiy.orderservice.mapper.OrderMapper;
 import com.kozitskiy.orderservice.repository.ItemRepository;
 import com.kozitskiy.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService{
 
@@ -29,6 +34,7 @@ public class OrderServiceImpl implements OrderService{
     private final ItemRepository itemRepository;
     private final OrderMapper orderMapper;
     private final UserClient userClient; // Feign-client
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     @Transactional
@@ -43,7 +49,6 @@ public class OrderServiceImpl implements OrderService{
                 .build();
 
         for (OrderItemRequest itemRequest : request.getItems()){
-            // find item
             Item item = itemRepository.findById(itemRequest.getItemId())
                     .orElseThrow(() -> new ItemNotFoundException("Item with id: " + itemRequest.getItemId() + " wasn't found"));
 
@@ -57,9 +62,24 @@ public class OrderServiceImpl implements OrderService{
             order.getOrderItems().add(orderItem);
         }
 
-        Order saved = orderRepository.save(order);
+        BigDecimal totalAmount = order.getOrderItems().stream()
+                .map(oi -> oi.getItem().getPrice().multiply(BigDecimal.valueOf(oi.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return enrichOrderWithUser(saved);
+        Order savedOrder = orderRepository.save(order);
+
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                order.getId(),
+                order.getUserId(),
+                totalAmount,
+                "USD"
+        );
+
+        orderEventProducer.sendOrderCreated(event);
+
+        log.info("Order created and sent to Kafka. ID: {}", savedOrder.getId());
+
+        return enrichOrderWithUser(savedOrder);
     }
 
     @Override
