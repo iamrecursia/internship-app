@@ -6,14 +6,15 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+
 @Builder(toBuilder = true)
-public class OrderResponse {
-    private Long id;
-    private Long userId;
-    private String userEmail; //added
-    private String status;
-    private LocalDateTime creationDate;
-    private List<OrderItemResponse> items;
-    private UserDto user; //added
+public record OrderResponse(
+        Long id,
+        Long userId,
+        String userEmail, //added
+        String status,
+        LocalDateTime creationDate,
+        List<OrderItemResponse> items,
+        UserDto user //added
+) {
 }
