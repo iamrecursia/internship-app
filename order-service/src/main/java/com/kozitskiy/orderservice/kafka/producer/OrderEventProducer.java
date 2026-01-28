@@ -18,6 +18,5 @@ public class OrderEventProducer {
         log.info("Sending OrderCreatedEvent to Kafka: {}", event);
 
         kafkaTemplate.send(KafkaTopics.ORDER_CREATED, String.valueOf(event.orderId()), event);
-
     }
 }
