@@ -1,45 +1,46 @@
 package com.kozitskiy.userservice.controller;
 
-import com.kozitskiy.userservice.dto.request.CreateUserDto;
-import com.kozitskiy.userservice.dto.response.UserResponseDto;
-import com.kozitskiy.userservice.dto.response.UserWithCardResponseDto;
+import com.kozitskiy.userservice.dto.UserRequest;
+import com.kozitskiy.userservice.dto.UserResponse;
+import com.kozitskiy.userservice.dto.UserWithCardResponse;
 import com.kozitskiy.userservice.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 @RequiredArgsConstructor
+@Validated
 public class UserController {
+
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody CreateUserDto dto){
-        UserResponseDto user = userService.createUser(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest dto){
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable long id, @Valid @RequestBody CreateUserDto dto){
-        UserResponseDto user = userService.updateUserById(id, dto);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable long id,
+            @Valid @RequestBody UserRequest dto){
+        return ResponseEntity.ok(userService.updateUserById(id, dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable long id){
-        UserResponseDto user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserResponse> getUserById(@PathVariable long id){
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDto>> getAllUsers(){
-        List<UserResponseDto> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<List<UserResponse>> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @DeleteMapping("/{id}")
@@ -48,15 +49,13 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserResponseDto> getUserByEmail(@PathVariable String email){
-        UserResponseDto user = userService.getUserByEmail(email);
-        return ResponseEntity.ok(user);
+    @GetMapping("/search")
+    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email){
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     @GetMapping("/{id}/with-cards")
-    public ResponseEntity<UserWithCardResponseDto> getUserWithCards(@PathVariable long id){
-        UserWithCardResponseDto userWithCards = userService.getUserWithCards(id);
-        return ResponseEntity.ok(userWithCards);
+    public ResponseEntity<UserWithCardResponse> getUserWithCards(@PathVariable long id){
+        return ResponseEntity.ok(userService.getUserWithCards(id));
     }
 }
