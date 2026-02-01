@@ -32,19 +32,17 @@ spring:
         default_schema: public
 
   # Caching & Redis
-  cache:
-    type: redis
-    redis:
-      cache-null-values: false
-      time-to-live: 10m # Устанавливаем время жизни кэша по умолчанию
-  
   data:
     redis:
       host: ${SPRING_REDIS_HOST:localhost}
       port: ${SPRING_REDIS_PORT:6379}
       password: ${SPRING_REDIS_PASSWORD:}
-      lettuce:
-        shutdown-timeout: 200ms
+
+  cache:
+    type: redis
+    redis:
+      cache-null-values: false
+      time-to-live: 10m
 
   # Serialization
   jackson:

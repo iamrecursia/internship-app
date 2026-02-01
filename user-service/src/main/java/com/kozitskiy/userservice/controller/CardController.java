@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/cards")
+@RequestMapping("api/v1/cards")
 @RequiredArgsConstructor
 public class CardController {
     private final CardService cardService;
@@ -54,15 +54,3 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 }
-
-/*
-
-{
-  "name": "John",
-  "surname": "Biden",
-  "birthDate": "1990-05-15T00:00:00",
-  "email": "john.doe@example.com"
-}
-
-
- */
