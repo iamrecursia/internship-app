@@ -1,17 +1,21 @@
 package com.kozitskiy.userservice.service.user;
 
-import com.kozitskiy.userservice.dto.request.CreateUserDto;
-import com.kozitskiy.userservice.dto.response.CardResponseDto;
-import com.kozitskiy.userservice.dto.response.UserResponseDto;
-import com.kozitskiy.userservice.dto.response.UserWithCardResponseDto;
+import com.kozitskiy.userservice.dto.UserRequest;
+import com.kozitskiy.userservice.dto.CardResponse;
+import com.kozitskiy.userservice.dto.UserResponse;
+import com.kozitskiy.userservice.dto.UserWithCardResponse;
 import com.kozitskiy.userservice.entity.Card;
 import com.kozitskiy.userservice.entity.User;
 import com.kozitskiy.userservice.exception.UserNotFoundException;
 import com.kozitskiy.userservice.repository.CardRepository;
 import com.kozitskiy.userservice.repository.UserRepository;
-import com.kozitskiy.userservice.util.CardMapper;
-import com.kozitskiy.userservice.util.UserMapper;
+import com.kozitskiy.userservice.mapper.CardMapper;
+import com.kozitskiy.userservice.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,40 +30,38 @@ public class UserServiceImpl implements UserService{
     private final UserMapper userMapper;
     private final CardMapper cardMapper;
 
-    private static final String USER_WITH_CARDS_CACHE = "UserService::userWithCards";
-    private static final String USER_BY_ID_CACHE = "UserService::getById";
-    private static final String USER_BY_EMAIL_CACHE = "UserService::getByEmail";
+    private static final String USER_CACHE = "UserCache";
+    private static final String USER_CARDS_CACHE = "UserCardsCache";
 
     @Override
     @Transactional
-//    @Caching(put = {
-//            @CachePut(value = USER_BY_ID_CACHE, key = "#result.id"),
-//            @CachePut(value = USER_BY_EMAIL_CACHE, key = "#result.email"),
-//    })
-    public UserResponseDto createUser(CreateUserDto userDto) {
+    @Caching(put = {
+            @CachePut(value = USER_CACHE, key = "#result.id"),
+            @CachePut(value = USER_CACHE, key = "#result.email")
+    })
+    public UserResponse createUser(UserRequest userDto) {
         User user = userMapper.toEntity(userDto);
-        User saved = userRepository.save(user);
-        return userMapper.toDto(saved);
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Override
     @Transactional(readOnly = true)
-//    @Cacheable(value = USER_BY_ID_CACHE, key = "#id", sync = true)
-    public UserResponseDto getUserById(long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User with id = " + id + " not found"));
-        return userMapper.toDto(user);
+    @Cacheable(value = USER_CACHE, key = "#id", sync = true)
+    public UserResponse getUserById(long id) {
+        return userRepository.findById(id)
+                .map(userMapper::toDto)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + id));
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers() {
+    public List<UserResponse> getAllUsers() {
         return userMapper.toDtoList(userRepository.findAll());
     }
 
     @Override
     @Transactional(readOnly = true)
-//    @Cacheable(value = USER_BY_EMAIL_CACHE, key = "#email", sync = true)
-    public UserResponseDto getUserByEmail(String email) {
+    @Cacheable(value = USER_CACHE, key = "#email")
+    public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         return userMapper.toDto(user);
@@ -67,58 +69,57 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-//    @Caching(put = {
-//            @CachePut(value = USER_BY_ID_CACHE, key = "#id"),
-//    }, evict = {
-//            @CacheEvict(value = USER_WITH_CARDS_CACHE, key = "#id")
-//    }
-//    )
-    public UserResponseDto updateUserById(long id, CreateUserDto dto) {
+    @Caching(put = {
+            @CachePut(value = USER_CACHE, key = "#id"),
+            @CachePut(value = USER_CACHE, key = "#result.email")
+    },
+    evict = {
+            @CacheEvict(value = USER_CARDS_CACHE, key = "#id")
+    })
+    public UserResponse updateUserById(long id, UserRequest dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + id));
         userMapper.updateFromDto(dto, user);
-        User updated = userRepository.save(user);
-        return userMapper.toDto(updated);
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Override
     @Transactional
-//    @Caching(evict = {
-//            @CacheEvict(value = USER_BY_ID_CACHE, key = "#id"),
-//            @CacheEvict(value = USER_WITH_CARDS_CACHE, key = "#id"),
-//            @CacheEvict(value = USER_BY_EMAIL_CACHE, allEntries = true)
-//    })
+    @Caching(evict = {
+            @CacheEvict(value = USER_CACHE, key = "#id"),
+            @CacheEvict(value = USER_CARDS_CACHE, key = "#id"),
+            @CacheEvict(value = USER_CACHE, allEntries = true)
+    })
     public void deleteUserById(long id) {
-        User user = userRepository.findById(id)
-                        .orElseThrow(() -> new UserNotFoundException("User with id: "+ id+ " not found"));
-        long userId = user.getId();
-        userRepository.deleteById(userId);
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException("User not found: " + id);
+        }
+        userRepository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-//    @Cacheable(value = USER_WITH_CARDS_CACHE, key = "#userId")
-    public UserWithCardResponseDto getUserWithCards(long userId) {
+    @Cacheable(value = USER_CARDS_CACHE, key = "#userId")
+    public UserWithCardResponse getUserWithCards(long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
         List<Card> cards = cardRepository.findCardsByUserId(userId, Pageable.unpaged()).getContent();
 
-        UserResponseDto userDto = userMapper.toDto(user);
-        List<CardResponseDto> cardDtos = cardMapper.toDtoList(cards);
+        UserResponse userDto = userMapper.toDto(user);
+        List<CardResponse> cardDtos = cardMapper.toDtoList(cards);
 
-        return UserWithCardResponseDto.builder()
-                .id(userDto.getId())
-                .name(userDto.getName())
-                .surname(userDto.getSurname())
-                .email(userDto.getEmail())
-                .birthDate(userDto.getBirthDate())
+        return UserWithCardResponse.builder()
+                .id(userDto.id())
+                .name(userDto.name())
+                .surname(userDto.surname())
+                .email(userDto.email())
+                .birthDate(userDto.birthDate())
                 .cards(cardDtos)
                 .build();
     }
 
     @Override
-//    @CacheEvict(value = USER_WITH_CARDS_CACHE, key = "#userId")
     public void evictUserWithCardsCache(long userId) {
 
     }
