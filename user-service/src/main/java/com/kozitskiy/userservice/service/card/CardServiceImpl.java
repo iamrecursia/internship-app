@@ -23,8 +23,6 @@ public class CardServiceImpl implements CardService{
     private final CardMapper cardMapper;
     private final UserService userService;
 
-    private static final String CARD_BY_ID_CACHE = "CardService::getById";;
-
     @Override
     @Transactional
     public CardResponse createCard(CardRequest cardDto) {
@@ -41,6 +39,7 @@ public class CardServiceImpl implements CardService{
     }
 
     @Override
+    @Transactional
     public CardResponse updateCard(long id, CardRequest dto) {
         Card card = cardRepository.findById(id)
                 .orElseThrow(() -> new CardNotFoundException("Card not found with id: " + id));
@@ -56,7 +55,6 @@ public class CardServiceImpl implements CardService{
 
     @Override
     @Transactional(readOnly = true)
-//    @Cacheable(value = CARD_BY_ID_CACHE, key = "#id", sync = true)
     public CardResponse getCardById(long id) {
         Card card = cardRepository.findById(id)
                 .orElseThrow(() -> new CardNotFoundException("Card not found with id: " + id));
@@ -64,6 +62,7 @@ public class CardServiceImpl implements CardService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CardResponse> getAllCards(Pageable pageable) {
         Page<Card> cards = cardRepository.findAll(pageable);
         return cards.map(cardMapper::toDto);
@@ -82,6 +81,7 @@ public class CardServiceImpl implements CardService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CardResponse> getCardsByUserId(long userId, Pageable pageable) {
         Page<Card> cards = cardRepository.findCardsByUserId(userId, pageable);
         return cards.map(cardMapper::toDto);

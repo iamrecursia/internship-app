@@ -5,6 +5,7 @@ import com.kozitskiy.userservice.dto.UserResponse;
 import com.kozitskiy.userservice.dto.UserWithCardResponse;
 import com.kozitskiy.userservice.service.user.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +51,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email){
+    public ResponseEntity<UserResponse> getUserByEmail(@RequestParam @Email String email){
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
