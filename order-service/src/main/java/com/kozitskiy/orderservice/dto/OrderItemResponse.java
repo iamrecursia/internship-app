@@ -1,13 +1,15 @@
 package com.kozitskiy.orderservice.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Data
-public class OrderItemResponse {
-    private Long itemId;
-    private String itemName;
-    private BigDecimal itemPrice;
-    private Integer quantity;
+@Builder
+public record OrderItemResponse(
+        Long itemId,
+        String itemName,
+        BigDecimal itemPrice,
+        Integer quantity
+) {
 }

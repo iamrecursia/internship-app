@@ -1,46 +1,81 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: user-service
-  docker:
-    compose:
-      enabled: false
-  jackson:
-    deserialization:
-      fail-on-unknown-properties: true
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # Database Configuration
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  # Liquibase
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  # JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false # Отключаем для экономии ресурсов
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
+
+  # Caching & Redis
   data:
     redis:
-      host: ${SPRING_REDIS_HOST}
-      port: ${SPRING_REDIS_PORT}
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
       password: ${SPRING_REDIS_PASSWORD:}
+
   cache:
-    type: redis #to avoid caching
+    type: redis
     redis:
-      time-to-live: 600000
-logging:
-  level:
-    org.springframework.cache: TRACE
-server:
-  port: 8081
-#Eureka
+      cache-null-values: false
+      time-to-live: 10m
+
+  # Serialization
+  jackson:
+    default-property-inclusion: non_null # Не шлем пустые поля в JSON
+    deserialization:
+      fail-on-unknown-properties: true
+
+  # Dev Tools
+  docker:
+    compose:
+      enabled: false
+
+# Service Discovery
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true # Важно для работы в Docker/K8s
 
+# Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.kozitskiy.userservice: DEBUG
+    org.springframework.cache: TRACE
