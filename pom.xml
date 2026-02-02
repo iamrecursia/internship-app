@@ -22,8 +22,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!--Versions-->
-    <spring-boot.version>3.5.7</spring-boot.version>
-    <spring-cloud.version>2025.0.0</spring-cloud.version>
+    <spring-boot.version>3.4.2</spring-boot.version>
+    <spring-cloud.version>2024.0.0</spring-cloud.version>
     <lombok.version>1.18.34</lombok.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>
