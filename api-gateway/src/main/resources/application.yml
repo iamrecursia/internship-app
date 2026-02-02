@@ -55,5 +55,5 @@ logging:
 
 #JWT
 jwt:
-  secret: "your-very-strong-secret-key-here-at-least-32-characters!"
+  secret: ${JWT_SECRET}
   expiration: 86400

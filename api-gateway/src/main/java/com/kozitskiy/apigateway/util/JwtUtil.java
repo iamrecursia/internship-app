@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 
 @Component
 public class JwtUtil {
@@ -20,10 +19,11 @@ public class JwtUtil {
 
     public boolean validateToken(String token){
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
                     .build()
-                    .parseSignedClaims(token);
+                    .parseClaimsJws(token)
+                    .getBody();
             return true;
         }catch (JwtException | IllegalArgumentException e){
             return false;

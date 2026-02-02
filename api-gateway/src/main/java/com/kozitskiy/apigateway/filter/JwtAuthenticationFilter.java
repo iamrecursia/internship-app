@@ -1,6 +1,7 @@
 package com.kozitskiy.apigateway.filter;
 
 import com.kozitskiy.apigateway.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -15,13 +16,11 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 @Order(1)
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter implements GlobalFilter {
 
-    @Autowired
-    private RouteValidator routeValidator;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final RouteValidator routeValidator;
+    private final JwtUtil jwtUtil;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
