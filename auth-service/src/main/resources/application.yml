@@ -1,4 +1,10 @@
+server:
+  port: 8084
+
 spring:
+  application:
+    name: auth-service
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auth_db}
@@ -6,31 +12,41 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
 
   liquibase:
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
     enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
     default-schema: public
 
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: validate #only check
-    show-sql: true
-  application:
-    name: auth-service
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
 
-JWT_SECRET_KEY: "your-very-strong-secret-key-here-at-least-32-characters!"
-JWT_ACCESS_EXPIRE: 3600000
-JWT_REFRESH_EXPIRE: 604800000
-#zipkin:
-#  base-url: ${SPRING_ZIPKIN_BASE_URL}
-#
-#management:
-#  tracing:
-#    sampling:
-#      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY}
-server:
-  port: 8084
+jwt:
+  secret: ${JWT_SECRET_KEY:your-very-strong-secret-key-here-at-least-32-characters!}
+  access-expire: ${JWT_ACCESS_EXPIRE:3600000}
+  refresh-expire: ${JWT_REFRESH_EXPIRE:604800000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: always
