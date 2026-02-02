@@ -55,5 +55,5 @@ logging:
 
 #JWT
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:my-default-local-development-secret-key-32-chars}
   expiration: 86400
