@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/v1.0/2025_10_20_create_users_and_card_info.yaml
+  - include:
+      file: db/changelog/v1.0/2026_01_30_add_auditing_fields_and_optimize_card_info.yaml

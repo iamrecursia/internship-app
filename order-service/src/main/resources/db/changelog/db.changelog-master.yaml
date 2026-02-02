@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/v1.0/v1.2_change-creation-date-to-timestamp.yaml
   - include:
       file: db/changelog/v1.0/v1.3_add-user_email-field-in-order-table.yaml
+  - include:
+      file: db/changelog/v1.0/v1.4_add_order_items_foreign-keys.yaml

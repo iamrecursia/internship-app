@@ -1,12 +1,17 @@
 package com.kozitskiy.orderservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Builder;
 import lombok.Data;
 
-@Data
-public class UserDto {
-    private Long id;
-    private String name;
-    private String surname;
-    private String email;
-    private String birthDate;
+import java.time.LocalDate;
+
+@Builder
+public record UserDto(
+        Long id,
+        String name,
+        String surname,
+        String email,
+        LocalDate birthDate
+) {
 }

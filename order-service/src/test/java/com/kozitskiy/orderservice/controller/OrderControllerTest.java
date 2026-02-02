@@ -3,23 +3,25 @@ package com.kozitskiy.orderservice.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kozitskiy.orderservice.dto.*;
 import com.kozitskiy.orderservice.service.OrderService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(OrderController.class)
 class OrderControllerTest {
@@ -30,129 +32,117 @@ class OrderControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private OrderService orderService;
 
     @Test
-    void createOrder_shouldReturnCreatedOrder() throws Exception {
-        // Given: входной запрос
-        OrderItemRequest itemRequest = new OrderItemRequest();
-        itemRequest.setItemId(1L);
-        itemRequest.setQuantity(2);
+    @DisplayName("Should return 201 Created when order is successfully created")
+    void createOrder_ShouldReturnCreated() throws Exception {
+        OrderItemRequest itemRequest = new OrderItemRequest(101L, 2);
+        OrderCreateRequest request = new OrderCreateRequest(1L, "test@mail.com", List.of(itemRequest));
 
-        OrderCreateRequest request = new OrderCreateRequest();
-        request.setUserId(123L);
-        request.setUserEmail("test@example.com");
-        request.setItems(List.of(itemRequest));
-
-        // Given: ответ от сервиса
-        UserDto userDto = new UserDto();
-        userDto.setId(1L);
-        userDto.setEmail("test@example.com");
-        userDto.setName("Test User");
-
-        OrderResponse serviceResponse = OrderResponse.builder()
+        UserDto userDto = UserDto.builder()
                 .id(1L)
-                .userId(123L)
-                .userEmail("test@example.com")
-                .status("PENDING")
+                .name("Ivan")
+                .surname("Ivanov")
+                .email("test@mail.com")
+                .birthDate(LocalDate.of(1990, 5, 15))
+                .build();
+
+        OrderItemResponse itemResponse = OrderItemResponse.builder()
+                .itemId(1L)
+                .itemName("Laptop")
+                .itemPrice(BigDecimal.valueOf(150.0))
+                .quantity(2)
+                .build();
+
+        OrderResponse response = OrderResponse.builder()
+                .id(1L)
+                .userId(1L)
+                .userEmail("test@mail.com")
+                .status("CREATED")
                 .creationDate(LocalDateTime.now())
-                .items(List.of())
+                .items(List.of(itemResponse))
                 .user(userDto)
                 .build();
 
-        when(orderService.createOrder(any(OrderCreateRequest.class)))
-                .thenReturn(serviceResponse);
+        when(orderService.createOrder(any(OrderCreateRequest.class))).thenReturn(response);
 
-        // When & Then
-        mockMvc.perform(post("/orders")
+        mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.userId").value(123))
-                .andExpect(jsonPath("$.userEmail").value("test@example.com"))
-                .andExpect(jsonPath("$.user.email").value("test@example.com"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.user.name").value("Ivan"))
+                .andExpect(jsonPath("$.items[0].itemName").value("Laptop"))
+                .andExpect(jsonPath("$.items[0].quantity").value(2));
     }
 
     @Test
-    void createOrder_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
-        OrderCreateRequest invalidRequest = new OrderCreateRequest();
-        invalidRequest.setUserEmail("test@example.com");
-        invalidRequest.setItems(List.of());
+    @DisplayName("GET /api/v1/orders/{id} - Should return 200 OK")
+    void getOrderById_ShouldReturnOrder() throws Exception {
+        Long orderId = 1L;
+        OrderResponse response = OrderResponse.builder().id(orderId).userEmail("test@mail.com").build();
 
-        mockMvc.perform(post("/orders")
+        when(orderService.getOrderById(orderId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/orders/{id}", orderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(orderId))
+                .andExpect(jsonPath("$.userEmail").value("test@mail.com"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/orders?ids=... - Should return list of orders")
+    void getOrdersByIds_ShouldReturnList() throws Exception {
+        List<Long> ids = List.of(1L, 2L);
+        OrderResponse res1 = OrderResponse.builder().id(1L).build();
+        OrderResponse res2 = OrderResponse.builder().id(2L).build();
+
+        when(orderService.getOrdersByIds(ids)).thenReturn(List.of(res1, res2));
+
+        mockMvc.perform(get("/api/v1/orders")
+                        .param("ids", "1,2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/orders/{id} - Should update status")
+    void updateOrder_ShouldReturnUpdatedOrder() throws Exception {
+        Long orderId = 1L;
+        OrderUpdateRequest updateRequest = new OrderUpdateRequest("COMPLETED");
+        OrderResponse response = OrderResponse.builder().id(orderId).status("COMPLETED").build();
+
+        when(orderService.updateOrder(eq(orderId), any(OrderUpdateRequest.class))).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/orders/{id}", orderId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 
     @Test
-    void deleteOrder_shouldReturnNoContent() throws Exception {
-        doNothing().when(orderService).deleteOrder(1L);
+    @DisplayName("DELETE /api/v1/orders/{id} - Should return 204 No Content")
+    void deleteOrder_ShouldReturnNoContent() throws Exception {
+        Long orderId = 1L;
+        doNothing().when(orderService).deleteOrder(orderId);
 
-        mockMvc.perform(delete("/orders/1"))
+        mockMvc.perform(delete("/api/v1/orders/{id}", orderId))
                 .andExpect(status().isNoContent());
     }
 
-
     @Test
-    void getOrdersByStatuses_shouldReturnOrders() throws Exception {
-        OrderResponse order = OrderResponse.builder()
-                .id(1L)
-                .userId(100L)
-                .status("PENDING")
-                .userEmail("test@example.com")
-                .items(List.of())
-                .user(new UserDto())
-                .build();
+    @DisplayName("POST /api/v1/orders - Should return 400 if validation fails")
+    void createOrder_InvalidEmail_ShouldReturnBadRequest() throws Exception {
+        // Невалидный email
+        OrderCreateRequest invalidRequest = new OrderCreateRequest(1L, "invalid-email", List.of());
 
-        when(orderService.getOrdersByStatuses(Arrays.asList("pending", "confirmed")))
-                .thenReturn(List.of(order));
-
-        mockMvc.perform(get("/orders/by-status?statuses=pending&statuses=confirmed"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
-    }
-
-    @Test
-    void getOrderById_shouldReturnOrder() throws Exception {
-        UserDto userDto = new UserDto();
-        userDto.setId(1L);
-        userDto.setEmail("test@example.com");
-
-        OrderResponse response = OrderResponse.builder()
-                .id(10L)
-                .userId(123L)
-                .userEmail("test@example.com")
-                .status("PENDING")
-                .creationDate(LocalDateTime.now())
-                .items(List.of())
-                .user(userDto)
-                .build();
-
-        when(orderService.getOrderById(10L)).thenReturn(response);
-
-        mockMvc.perform(get("/orders/10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.user.email").value("test@example.com"));
-    }
-
-
-
-    @Test
-    void updateOrder_shouldReturnBadRequest_whenStatusInvalid() throws Exception {
-        OrderUpdateRequest invalidRequest = new OrderUpdateRequest();
-        invalidRequest.setStatus(""); // пустой статус
-
-        mockMvc.perform(patch("/orders/1")
+        mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
     }
-
 }

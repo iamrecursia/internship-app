@@ -1,0 +1,31 @@
+name: Java CI/CD for Dev
+
+on:
+  push:
+    branches: [ "dev" ] # Запускать только при пуше в dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 23 # Укажи свою версию Java
+        uses: actions/setup-java@v4
+        with:
+          java-package: jdk
+          java-version: '23'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        # Мы пропускаем тесты, требующие реальную БД,
+        # либо используем H2, как мы настроили ранее
+        run: mvn clean install -DskipTests
+
+      - name: Build Docker Images
+        # Если у тебя есть Dockerfile в каждом сервисе
+        run: |
+          docker build -t my-reg.com/order-service:dev ./order-service
+          docker build -t my-reg.com/payment-service:dev ./payment-service

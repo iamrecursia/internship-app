@@ -7,9 +7,10 @@ import org.springframework.stereotype.Component;
 public class UserClientFallback implements UserClient {
     @Override
     public UserDto getUserByEmail(String email){
-        UserDto fallback = new UserDto();
-        fallback.setEmail(email);
-        fallback.setSurname("User unavailable");
-        return fallback;
+
+        return UserDto.builder()
+                .email(email)
+                .surname("User unavailable")
+                .build();
     }
 }

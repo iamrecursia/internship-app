@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    # H2 в памяти: быстро и не нужен Postgres
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # Hibernate сам создаст таблицы по твоим @Entity (вместо Liquibase)
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  # Отключаем Liquibase в тестах, чтобы не конфликтовал с Hibernate
+  liquibase:
+    enabled: false

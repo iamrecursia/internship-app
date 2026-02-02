@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: kozitskiy
+
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: surname
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: birth_date
+                  type: date
+                  constraints:
+                    nullable: true
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+        - createIndex:
+            indexName: idx_users_email
+            tableName: users
+            columns:
+              - column:
+                  name: email
+
+        - createTable:
+            tableName: card_info
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_card_info_user_id
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: number
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: holder
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiration_date
+                  type: date
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_card_info_user_id
+            tableName: card_info
+            columns:
+              - column:
+                  name: user_id

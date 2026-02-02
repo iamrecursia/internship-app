@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: kazitskiy
+      comment: Add auditing fields and optimize card_info table
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addColumn:
+            tableName: card_info
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            columnNames: number
+            constraintName: uk_card_info_number
+            tableName: card_info
+
+        - modifyDataType:
+            columnName: number
+            newDataType: varchar(20)
+            tableName: card_info
+
+        - addColumn:
+            tableName: card_info
+            columns:
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP

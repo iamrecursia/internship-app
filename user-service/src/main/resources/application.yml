@@ -1,0 +1,81 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+
+  # Database Configuration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/user_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  # Liquibase
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  # JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false # Отключаем для экономии ресурсов
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
+
+  # Caching & Redis
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+
+  cache:
+    type: redis
+    redis:
+      cache-null-values: false
+      time-to-live: 10m
+
+  # Serialization
+  jackson:
+    default-property-inclusion: non_null # Не шлем пустые поля в JSON
+    deserialization:
+      fail-on-unknown-properties: true
+
+  # Dev Tools
+  docker:
+    compose:
+      enabled: false
+
+# Service Discovery
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true # Важно для работы в Docker/K8s
+
+# Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.kozitskiy.userservice: DEBUG
+    org.springframework.cache: TRACE

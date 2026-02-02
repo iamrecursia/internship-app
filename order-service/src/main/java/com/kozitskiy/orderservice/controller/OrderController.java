@@ -6,13 +6,14 @@ import com.kozitskiy.orderservice.dto.OrderUpdateRequest;
 import com.kozitskiy.orderservice.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("api/v1/orders")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
@@ -20,13 +21,12 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderCreateRequest request){
         OrderResponse response = orderService.createOrder(request);
-        return ResponseEntity.status(201).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id){
-        OrderResponse response = orderService.getOrderById(id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @GetMapping
@@ -35,27 +35,22 @@ public class OrderController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("by-status")
+    @GetMapping("/status")
     public ResponseEntity<List<OrderResponse>> getOrdersByStatuses(@RequestParam List<String> statuses){
-        List<OrderResponse> responses = orderService.getOrdersByStatuses(statuses);
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(orderService.getOrdersByStatuses(statuses));
     }
 
-
-    @PatchMapping("{id}")
-    public ResponseEntity<OrderResponse> updateOrder(@PathVariable Long id,
-                                                           @Valid @RequestBody OrderUpdateRequest request){
-        OrderResponse response = orderService.updateOrder(id, request);
-        return ResponseEntity.ok(response);
+    @PatchMapping("/{id}")
+    public ResponseEntity<OrderResponse> updateOrder(
+            @PathVariable Long id,
+            @Valid @RequestBody OrderUpdateRequest request){
+        return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id){
         orderService.deleteOrder(id);
         return ResponseEntity.noContent().build();
     }
-
-
-
 
 }
