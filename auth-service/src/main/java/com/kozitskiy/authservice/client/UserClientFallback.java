@@ -15,7 +15,7 @@ public class UserClientFallback implements UserClient {
     @Override
     public ResponseEntity<UserResponseDto> createUser(CreateUserRequest request) {
         log.error("Fallback triggered: user-service is unavailable. Failed to create user with email: {}",
-                request.getEmail());
+                request.email());
 
         throw new UserServiceUnavailableException("User service is currently unavailable");
     }

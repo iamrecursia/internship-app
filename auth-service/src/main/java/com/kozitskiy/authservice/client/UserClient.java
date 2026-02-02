@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "USER-SERVICE", fallback = UserClientFallback.class)
 public interface UserClient {
-    @PostMapping("/users")
+    @PostMapping("api/v1/users")
     ResponseEntity<UserResponseDto> createUser(@RequestBody CreateUserRequest request);
 }
