@@ -2,7 +2,7 @@ package com.kozitskiy.orderservice.kafka.consumer;
 
 import com.kozitskiy.dto.KafkaTopics;
 import com.kozitskiy.dto.PaymentProcessedEvent;
-import com.kozitskiy.orderservice.entity.OrderStatus;
+import com.kozitskiy.orderservice.entity.enums.OrderStatus;
 import com.kozitskiy.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
