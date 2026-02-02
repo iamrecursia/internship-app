@@ -27,6 +27,7 @@ databaseChangeLog:
               - column:
                   name: role
                   type: VARCHAR(50)
+                  defaultValue: "USER"
                   constraints:
                     nullable: false
 
