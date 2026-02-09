@@ -3,11 +3,18 @@ FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
 COPY pom.xml .
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
+
+RUN mvn install -N -DskipTests
+
+COPY shared-dto/pom.xml shared-dto/
+COPY shared-dto/src shared-dto/src/
+
+RUN mvn install -DskipTests -f shared-dto/pom.xml
 
 COPY order-service ./order-service
 
-WORKDIR /app/order-service
-RUN mvn clean package -DskipTests -B --no-transfer-progress
+RUN mvn package -DskipTests -f order-service/pom.xml
 
 FROM eclipse-temurin:21-jre-jammy
 

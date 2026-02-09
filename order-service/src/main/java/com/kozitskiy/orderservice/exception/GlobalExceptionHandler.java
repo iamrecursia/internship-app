@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import feign.FeignException;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +22,25 @@ public class GlobalExceptionHandler {
         log.error("Resource not found: {}", ex.getMessage());
 
         return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FeignException.NotFound.class)
+    public ResponseEntity<ErrorResponse> handleFeignNotFound(FeignException.NotFound ex) {
+        log.error("External service resource not found: {}", ex.getMessage());
+
+        return buildResponse("User not found in external service", HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignStatusException(FeignException ex) {
+        log.error("External service error: {} - {}", ex.status(), ex.getMessage());
+        return buildResponse("External service error", HttpStatus.valueOf(ex.status()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(Exception ex){
+        log.error("User not found ex: ", ex);
+        return buildResponse("User not found ex", HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)

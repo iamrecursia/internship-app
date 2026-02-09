@@ -10,6 +10,7 @@ import com.kozitskiy.orderservice.entity.enums.OrderStatus;
 import com.kozitskiy.orderservice.exception.InvalidOrderStatusException;
 import com.kozitskiy.orderservice.exception.ItemNotFoundException;
 import com.kozitskiy.orderservice.exception.OrderNotFoundException;
+import com.kozitskiy.orderservice.exception.UserNotFoundException;
 import com.kozitskiy.orderservice.kafka.producer.OrderEventProducer;
 import com.kozitskiy.orderservice.mapper.OrderItemMapper;
 import com.kozitskiy.orderservice.mapper.OrderMapper;
@@ -41,8 +42,14 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
 
-        Order order = orderMapper.toEntity(request);
+        UserDto user = userClient.getUserByEmail(request.userEmail());
 
+        if (user == null || user.id() == null) {
+            throw new UserNotFoundException("User not found with email: " + request.userEmail());
+        }
+
+        Order order = orderMapper.toEntity(request);
+        order.setUserId(user.id());
         order.setStatus(OrderStatus.PENDING);
         order.setCreationDate(LocalDateTime.now());
 
@@ -52,7 +59,6 @@ public class OrderServiceImpl implements OrderService {
 
             OrderItem orderItem = orderItemMapper.toEntity(itemReq);
             orderItem.setItem(item);
-
             order.addOrderItem(orderItem);
         });
 
@@ -61,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
         OrderCreatedEvent event = orderMapper.toEvent(savedOrder, savedOrder.getTotalAmount());
         orderEventProducer.sendOrderCreated(event);
 
-        log.info("Order created and sent to Kafka. ID: {}", savedOrder.getId());
+        log.info("Order created. ID: {}", savedOrder.getId());
 
         return enrichOrderWithUser(savedOrder);
     }
