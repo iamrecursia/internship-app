@@ -23,12 +23,12 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping
-    public ResponseEntity<PaymentResponse> createPayment(@Valid @RequestBody PaymentRequest request){
-        PaymentResponse response = paymentService.createPayment(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+//    @PostMapping
+//    public ResponseEntity<PaymentResponse> createPayment(@Valid @RequestBody PaymentRequest request){
+//        PaymentResponse response = paymentService.createPayment(request);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//    }
 
     @GetMapping("/order/{orderId}")
     public ResponseEntity<List<PaymentResponse>> getPaymentsByOrderId(@PathVariable Long orderId){
