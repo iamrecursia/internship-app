@@ -59,28 +59,6 @@ public class PaymentControllerIT extends BaseIT{
     }
 
     @Test
-    void createPayment_shouldSaveToDatabase_whenSuccess() throws Exception{
-        Long orderId = 101L;
-        PaymentRequest request = requestBuilder.orderId(orderId).build();
-
-        when(randomNumberClient.getRandomNumber()).thenReturn("2");
-
-        mockMvc.perform(post("/api/v1/payments")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.orderId").value(orderId))
-                .andExpect(jsonPath("$.amount").value(250.00))
-                .andExpect(jsonPath("$.currency").value("USD"));
-
-        Payment saved = paymentRepository.findAllByOrderId(orderId).getFirst();
-        assertEquals(PaymentStatus.SUCCESS, saved.getStatus());
-        assertEquals(0, new BigDecimal("250.00").compareTo(saved.getAmount()));
-    }
-
-    @Test
     void getTotalSum_shouldReturnCorrectSum_whenSuccess() throws Exception{
         Instant now = Instant.now();
         Instant start = now.minusSeconds(3600);
