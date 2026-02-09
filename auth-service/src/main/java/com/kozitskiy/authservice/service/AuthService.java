@@ -65,7 +65,7 @@ public class AuthService {
 
     public JwtResponse login(LoginRequest request){
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.email())
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
         String accessToken = jwtUtil.generateAccessToken(request.email());

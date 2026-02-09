@@ -1,19 +1,13 @@
 package com.kozitskiy.authservice.controller;
 
-import com.kozitskiy.authservice.client.UserClient;
 import com.kozitskiy.authservice.dto.JwtResponse;
 import com.kozitskiy.authservice.dto.LoginRequest;
 import com.kozitskiy.authservice.dto.RegisterRequest;
-import com.kozitskiy.authservice.repository.UserRepository;
 import com.kozitskiy.authservice.service.AuthService;
 import com.kozitskiy.authservice.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;

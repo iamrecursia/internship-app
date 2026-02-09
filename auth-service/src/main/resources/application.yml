@@ -7,7 +7,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auth_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:54323/auth_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
 
@@ -38,7 +38,7 @@ eureka:
     fetch-registry: true
 
 jwt:
-  secret: ${JWT_SECRET_KEY:your-very-strong-secret-key-here-at-least-32-characters!}
+  secret: ${JWT_SECRET_KEY:my-default-local-development-secret-key-32-chars}
   access-expire: ${JWT_ACCESS_EXPIRE:3600000}
   refresh-expire: ${JWT_REFRESH_EXPIRE:604800000}
 
