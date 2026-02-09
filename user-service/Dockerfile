@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY pom.xml .
 
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
+
 COPY user-service/pom.xml user-service/
 COPY user-service/src user-service/src/
 
