@@ -2,14 +2,17 @@ FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
 COPY pom.xml .
+
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
+
+RUN mvn install -N -DskipTests
+
+COPY api-gateway/src api-gateway/src/
 COPY api-gateway/pom.xml api-gateway/
 
-RUN mvn dependency:go-offline -B -pl api-gateway -am
+RUN mvn clean package -DskipTests -B --no-transfer-progress -f api-gateway/pom.xml
 
-COPY api-gateway/src ./api-gateway/src
-RUN mvn package -DskipTests -B -pl api-gateway -am
-
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring
