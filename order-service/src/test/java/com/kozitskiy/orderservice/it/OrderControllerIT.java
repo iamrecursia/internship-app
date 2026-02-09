@@ -19,6 +19,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 public class OrderControllerIT extends BaseIT {
 
@@ -54,6 +56,10 @@ public class OrderControllerIT extends BaseIT {
     @Test
     @DisplayName("Should create order and save it to database")
     void createOrder_ShouldSaveToDb() {
+
+        when(userClient.getUserByEmail(anyString()))
+                .thenReturn(UserDto.builder().id(1L).email("test@mail.com").build());
+
         OrderItemRequest itemRequest = new OrderItemRequest(savedItemId, 2);
         OrderCreateRequest request = new OrderCreateRequest(1L, "test@mail.com", List.of(itemRequest));
 
@@ -83,6 +89,10 @@ public class OrderControllerIT extends BaseIT {
     @Test
     @DisplayName("Should fetch saved order by ID")
     void getOrderById_ShouldReturnOrder() {
+
+        when(userClient.getUserByEmail(anyString()))
+                .thenReturn(UserDto.builder().id(2L).email("user@mail.com").build());
+
         OrderItemRequest itemRequest = new OrderItemRequest(savedItemId, 1);
         OrderCreateRequest createRequest = new OrderCreateRequest(2L, "user@mail.com", List.of(itemRequest));
 
@@ -108,6 +118,10 @@ public class OrderControllerIT extends BaseIT {
     @Test
     @DisplayName("Should delete order from database")
     void deleteOrder_ShouldRemoveFromDb() {
+
+        when(userClient.getUserByEmail(anyString()))
+                .thenReturn(UserDto.builder().id(1L).email("del@mail.com").build());
+
         OrderItemRequest itemRequest = new OrderItemRequest(savedItemId, 1);
         OrderCreateRequest createRequest = new OrderCreateRequest(1L, "del@mail.com", List.of(itemRequest));
 
