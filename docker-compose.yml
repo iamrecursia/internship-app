@@ -1,6 +1,9 @@
 services:
+
+  # --- DATABASES ---
   postgres-order-service:
     image: postgres:15
+    container_name: postgres-order
     environment:
       POSTGRES_USER: ${POSTGRES_USER_FOR_ORDER_SERVICE}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_ORDER_SERVICE}
@@ -18,6 +21,7 @@ services:
 
   postgres-user-service:
     image: postgres:15
+    container_name: postgres-user
     environment:
       POSTGRES_USER: ${POSTGRES_USER_FOR_USER_SERVICE}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_USER_SERVICE}
@@ -35,6 +39,7 @@ services:
 
   postgres-auth-service:
     image: postgres:15
+    container_name: postgres-auth
     environment:
       POSTGRES_USER: ${POSTGRES_USER_FOR_AUTH_SERVICE}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_AUTH_SERVICE}
@@ -50,8 +55,182 @@ services:
       retries: 10
     restart: unless-stopped
 
+  postgres-payment-service:
+    image: postgres:15
+    container_name: postgres-payment
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_FOR_PAYMENT_SERVICE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_FOR_PAYMENT_SERVICE}
+      POSTGRES_DB: ${POSTGRES_DB_FOR_PAYMENT_SERVICE}
+    ports:
+      - "${POSTGRES_PORT_FOR_PAYMENT}:5432"
+    volumes:
+      - pgdata_payment:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER_FOR_PAYMENT_SERVICE} -d ${POSTGRES_DB_FOR_PAYMENT_SERVICE}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+# --- MICROSERVICES ---
+
+  registry-service:
+    build:
+      context: .
+      dockerfile: registry-service/Dockerfile
+    container_name: registry-service
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URI}
+    depends_on:
+      registry-service:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth-service:5432/${POSTGRES_DB_FOR_AUTH_SERVICE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_FOR_AUTH_SERVICE}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_FOR_AUTH_SERVICE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URI}
+    depends_on:
+      postgres-auth-service:
+        condition: service_healthy
+      registry-service:
+        condition: service_started
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      # DB Config
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user-service:5432/${POSTGRES_DB_FOR_USER_SERVICE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_FOR_USER_SERVICE}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_FOR_USER_SERVICE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URI}
+      # Redis Config (Только здесь!)
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      postgres-user-service:
+        condition: service_healthy
+      registry-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    container_name: order-service
+    ports:
+      - "8083:8083"
+    environment:
+      # DB Config
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order-service:5432/${POSTGRES_DB_FOR_ORDER_SERVICE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_FOR_ORDER_SERVICE}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_FOR_ORDER_SERVICE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URI}
+      # Kafka Config
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    depends_on:
+      postgres-order-service:
+        condition: service_healthy
+      registry-service:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: payment-service
+    ports:
+      - "8086:8086"
+    environment:
+      # DB Config
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-payment-service:5432/${POSTGRES_DB_FOR_PAYMENT_SERVICE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER_FOR_PAYMENT_SERVICE}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD_FOR_PAYMENT_SERVICE}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URI}
+      # Kafka Config
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    depends_on:
+      postgres-payment-service:
+        condition: service_healthy
+      registry-service:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+
+
+        # --- INFRASTRUCTURE (MESSAGE BROKER & CACHE) ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Доступ: kafka:29092 (внутри docker), localhost:9092 (снаружи)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata_order:
   pgdata_user:
   pgdata_auth:
+  pgdata_payment:

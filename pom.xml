@@ -14,6 +14,7 @@
     <module>auth-service</module>
     <module>user-service</module>
     <module>shared-dto</module>
+    <module>payment-service</module>
   </modules>
 
   <properties>
@@ -51,6 +52,7 @@
         <artifactId>spring-cloud-dependencies</artifactId>
         <version>${spring-cloud.version}</version>
         <type>pom</type>
+
         <scope>import</scope>
       </dependency>
       <dependency>
@@ -93,5 +95,21 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
+
 </project>
