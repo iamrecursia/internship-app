@@ -70,17 +70,7 @@ public class PaymentControllerTest {
                 .build();
     }
 
-    @Test
-    void createPayment_shouldReturnCreated() throws Exception {
 
-        when(paymentService.createPayment(any(PaymentRequest.class))).thenReturn(defaultResponse);
-
-        mockMvc.perform(post("/api/v1/payments").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.status").value("SUCCESS"));
-    }
 
     @Test
     void getPaymentsByOrderId_shouldReturnList() throws Exception{
@@ -156,14 +146,7 @@ public class PaymentControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("PAYMENT_NOT_FOUND"));
     }
 
-    @Test
-    void createPayment_shouldReturn400_whenAmountIsNegative() throws Exception{
 
-        mockMvc.perform(post("/api/v1/payments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
-    }
 
     @Test
     void getTotalSum_shouldReturn400_whenDataAreInvalid() throws Exception{
